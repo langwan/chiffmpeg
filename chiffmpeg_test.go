@@ -6,17 +6,20 @@ import (
 )
 
 var ff = &FfmpegTools{
-	Ffmpeg:  "/opt/homebrew/bin/ffmpeg",
-	Ffprobe: "/opt/homebrew/bin/ffprobe",
+	Ffmpeg:         "/opt/homebrew/bin/ffmpeg",
+	Ffprobe:        "/opt/homebrew/bin/ffprobe",
+	CommandTimeout: time.Duration(30 * time.Second),
 }
 
 func TestFfmpegTools_Thumbnail(t *testing.T) {
 
 	type args struct {
-		src string
-		st  float64
-		dst string
+		src       string
+		duration  float64
+		dst       string
+		overwrite bool
 	}
+
 	tests := []struct {
 		name string
 
@@ -26,21 +29,23 @@ func TestFfmpegTools_Thumbnail(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				src: "samples/sample.mp4",
-				st:  3.0,
-				dst: "samples/sample.jpg",
+				src:       "samples/sample.mp4",
+				duration:  3.0,
+				dst:       "samples/sample.jpg",
+				overwrite: true,
 			},
 			wantErr: false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			if err := ff.Thumbnail(tt.args.src, tt.args.st, tt.args.dst); (err != nil) != tt.wantErr {
+			if err := ff.Thumbnail(tt.args.src, tt.args.dst, tt.args.duration, tt.args.overwrite); (err != nil) != tt.wantErr {
 				t.Errorf("Thumbnail() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
+
 }
 
 func TestFfmpegTools_Duration(t *testing.T) {
@@ -83,8 +88,9 @@ func TestFfmpegTools_Duration(t *testing.T) {
 func TestFfmpegTools_Transcoding(t *testing.T) {
 
 	type args struct {
-		src string
-		dst string
+		src       string
+		dst       string
+		overwrite bool
 	}
 	tests := []struct {
 		name    string
@@ -94,15 +100,16 @@ func TestFfmpegTools_Transcoding(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				src: "samples/sample.mov",
-				dst: "samples/sample_out.mp4",
+				src:       "samples/sample.mov",
+				dst:       "samples/sample_out.mp4",
+				overwrite: true,
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ff.Transcoding(tt.args.src, tt.args.dst); (err != nil) != tt.wantErr {
+			if _, err := ff.Transcoding(tt.args.src, tt.args.dst, tt.args.overwrite); (err != nil) != tt.wantErr {
 				t.Errorf("Transcoding() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

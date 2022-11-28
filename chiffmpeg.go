@@ -2,6 +2,7 @@ package chiffmpeg
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"os/exec"
@@ -11,20 +12,25 @@ import (
 )
 
 type FfmpegTools struct {
-	Ffmpeg  string `json:"ffmpeg"`
-	Ffprobe string `json:"ffprobe"`
+	Ffmpeg         string        `json:"ffmpeg"`
+	Ffprobe        string        `json:"ffprobe"`
+	CommandTimeout time.Duration `json:"command_timeout"`
 }
 
-func (ff *FfmpegTools) Transcoding(src string, dst string) error {
+func (ff *FfmpegTools) Transcoding(src string, dst string, overwrite bool) (output []byte, err error) {
 	args := []string{"-i", src, "-c:v", "libx264", "-strict", "-2", dst}
-	cmd := exec.Command(ff.Ffmpeg, args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return err
+	if overwrite {
+		args = append([]string{"-y"}, args...)
 	}
-	return nil
+	ctx, _ := context.WithTimeout(context.Background(), ff.CommandTimeout)
+	cmd := exec.CommandContext(ctx, ff.Ffmpeg, args...)
+	output, err = cmd.Output()
+	if ctx.Err() != nil {
+		return output, ctx.Err()
+	} else if err != nil {
+		return output, err
+	}
+	return output, err
 }
 
 func (ff *FfmpegTools) Duration(src string) (time.Duration, error) {
@@ -41,11 +47,15 @@ func (ff *FfmpegTools) Duration(src string) (time.Duration, error) {
 	if err != nil {
 		return td, err
 	}
+
 	return td, nil
 }
 
-func (ff *FfmpegTools) Thumbnail(src string, st float64, dst string) error {
-	args := []string{"-i", src, "-ss", fmt.Sprintf("%f", st), "-vframes", "1", dst}
+func (ff *FfmpegTools) Thumbnail(src string, dst string, duration float64, overwrite bool) error {
+	args := []string{"-i", src, "-ss", fmt.Sprintf("%f", duration), "-vframes", "1", dst}
+	if overwrite {
+		args = append([]string{"-y"}, args...)
+	}
 	cmd := exec.Command(ff.Ffmpeg, args...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
