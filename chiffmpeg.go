@@ -12,8 +12,8 @@ import (
 )
 
 type FfmpegTools struct {
-	Ffmpeg         string        `json:"ffmpeg"`
-	Ffprobe        string        `json:"ffprobe"`
+	FFMpeg         string        `json:"ffmpeg"`
+	FFProbe        string        `json:"ffprobe"`
 	CommandTimeout time.Duration `json:"command_timeout"`
 }
 
@@ -23,7 +23,7 @@ func (ff *FfmpegTools) Transcoding(src string, dst string, overwrite bool) (outp
 		args = append([]string{"-y"}, args...)
 	}
 	ctx, _ := context.WithTimeout(context.Background(), ff.CommandTimeout)
-	cmd := exec.CommandContext(ctx, ff.Ffmpeg, args...)
+	cmd := exec.CommandContext(ctx, ff.FFMpeg, args...)
 	output, err = cmd.Output()
 	if ctx.Err() != nil {
 		return output, ctx.Err()
@@ -34,7 +34,7 @@ func (ff *FfmpegTools) Transcoding(src string, dst string, overwrite bool) (outp
 }
 
 func (ff *FfmpegTools) Duration(src string) (time.Duration, error) {
-	c := fmt.Sprintf(`%s -i "%s" -show_format -v quiet | sed -n 's/duration=//p'`, ff.Ffprobe, src)
+	c := fmt.Sprintf(`%s -i "%s" -show_format -v quiet | sed -n 's/duration=//p'`, ff.FFProbe, src)
 	out, err := exec.Command("bash", "-c", c).Output()
 	if err != nil {
 		return time.Duration(0), err
@@ -56,7 +56,7 @@ func (ff *FfmpegTools) Thumbnail(src string, dst string, duration float64, overw
 	if overwrite {
 		args = append([]string{"-y"}, args...)
 	}
-	cmd := exec.Command(ff.Ffmpeg, args...)
+	cmd := exec.Command(ff.FFMpeg, args...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

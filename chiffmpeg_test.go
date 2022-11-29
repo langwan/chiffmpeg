@@ -6,8 +6,8 @@ import (
 )
 
 var ff = &FfmpegTools{
-	Ffmpeg:         "/opt/homebrew/bin/ffmpeg",
-	Ffprobe:        "/opt/homebrew/bin/ffprobe",
+	FFMpeg:         "/opt/homebrew/bin/ffmpeg",
+	FFProbe:        "/opt/homebrew/bin/ffprobe",
 	CommandTimeout: time.Duration(30 * time.Second),
 }
 
